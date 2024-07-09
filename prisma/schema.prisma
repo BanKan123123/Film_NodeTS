@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+//Forgot check table film and lack audioTrailer 
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model Users {
+  id         Int       @id @default(autoincrement())
+  user_name  String?
+  password   String?
+  email      String?
+  created_at DateTime? @default(now())
+  updatea_at DateTime? @default(now()) @updatedAt
+  films      Film[]
+  comments   Comment[]
+
+  @@unique([user_name])
+}
+
+model Category {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  slug              String?
+  created_at        DateTime?           @default(now())
+  updated_at        DateTime?           @default(now()) @updatedAt
+  CategoriesOnFilms CategoriesOnFilms[]
+
+  @@unique([name])
+}
+
+model Episode {
+  id           Int       @id @default(autoincrement())
+  title        String
+  slug         String?
+  audioUrl     String?
+  episodeIndex Int
+  film         Film      @relation(fields: [filmId], references: [id])
+  filmId       Int
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @default(now()) @updatedAt
+
+  @@unique([filmId, episodeIndex])
+  @@index([filmId, episodeIndex])
+}
+
+model Director {
+  id         Int       @id @default(autoincrement())
+  name       String
+  slug       String?
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+  film       Film[]
+
+  @@unique([name])
+}
+
+model SuggestFilms {
+  id         Int       @id @default(autoincrement())
+  film       Film      @relation(fields: [filmId], references: [id])
+  filmId     Int
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+}
+
+model CompletedFilms {
+  id         Int       @id @default(autoincrement())
+  film       Film      @relation(fields: [filmId], references: [id])
+  filmId     Int
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+}
+
+model Comment {
+  id             Int              @id @default(autoincrement())
+  title          String?
+  user           Users            @relation(fields: [userId], references: [id])
+  userId         Int
+  created_at     DateTime?        @default(now())
+  updatea_at     DateTime?        @default(now()) @updatedAt
+  filmId         Int
+  film           Film @relation(fields: [filmId], references: [id])
+}
+
+enum Status {
+  CONTINUE
+  FULL
+}
+
+model Film {
+  id               Int                 @id @default(autoincrement())
+  title            String
+  slug             String?
+  description      String              @db.VarChar(5000)
+  director         Director            @relation(fields: [directorId], references: [id])
+  directorId       Int
+  categoriesOnFilm CategoriesOnFilms[]
+  comments         Comment[]
+  status           Status              @default(CONTINUE)
+  rate             Float
+  view             Float
+  dateReleased     DateTime?           @default(now())
+  showTime         DateTime?           @default(now())
+  national         String?
+  created_at       DateTime?           @default(now())
+  updated_at       DateTime?           @default(now()) @updatedAt
+  imageThumbnail   String?
+  trailer          String?  
+  Users            Users?              @relation(fields: [usersId], references: [id])
+  usersId          Int?
+  Episode          Episode[]
+  SuggestFilms     SuggestFilms[]
+  CompletedFilms   CompletedFilms[]
+
+  @@unique([title])
+}
+
+model CategoriesOnFilms {
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  film       Film      @relation(fields: [filmId], references: [id])
+  filmId     Int
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+
+  @@unique([categoryId, filmId])
+}
+
+//model CommentsOnFilm {
+  //comment    Comment   @relation(fields: [commentId], references: [id])
+  //commentId  Int
+  //film       Film      @relation(fields: [filmId], references: [id])
+  //filmId     Int
+  //created_at DateTime? @default(now())
+  //updatea_at DateTime? @default(now()) @updatedAt
+
+ // @@unique([commentId, filmId])
+//}
